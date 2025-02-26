@@ -52,8 +52,8 @@ lighthouse:
   # hosts is a list of lighthouse hosts this node should report to and query from
   # IMPORTANT: THIS SHOULD BE EMPTY ON LIGHTHOUSE NODES
   # IMPORTANT2: THIS SHOULD BE LIGHTHOUSES' NEBULA IPs, NOT LIGHTHOUSES' REAL ROUTABLE IPs
-  hosts:
-    - "10.0.0.1"
+  hosts: []
+#    - "10.0.0.1"
 
   # remote_allow_list allows you to control ip ranges that this node will
   # consider when handshaking to another node. By default, any remote IPs are
@@ -206,12 +206,14 @@ relay:
 
 # Configure the private interface. Note: addr is baked into the nebula certificate
 #tun:
+  #routes:
+   # - route: 10.0.0.0/24
   # When tun is disabled, a lighthouse can be started without a local tun interface (and therefore without root)
  # disabled: false
   # Name of the device. If not set, a default will be chosen by the OS.
   # For macOS: if set, must be in the form `utun[0-9]+`.
   # For NetBSD: Required to be set, must be in the form `tun[0-9]+`
-  #dev: nebula1
+ # dev: nebula1
   # Toggles forwarding of local broadcast packets, the address of which depends on the ip/mask encoded in pki.cert
   #drop_local_broadcast: false
   # Toggles forwarding of multicast packets
@@ -219,13 +221,20 @@ relay:
   # Sets the transmit queue length, if you notice lots of transmit drops on the tun it may help to raise this number. Default is 500
   #tx_queue: 500
   # Default MTU for every packet, safe setting is (and the default) 1300 for internet based traffic
-  #mtu: 1300
-
+  #
+  #cidr: 10.0.0.1/24  # The Nebula IP of the lighthouse
   # Route based MTU overrides, you have known vpn ip paths that can support larger MTUs you can increase/decrease them here
-  routes:
-    #- mtu: 8800
-    #  route: 10.0.0.0/16
-
+  #routes:
+#  ##  - mtu: 1300
+   #   route: 10.0.0.1/24
+tun:
+  dev: nebula1
+  drop_local_broadcast: false
+  drop_multicast: false
+  tx_queue: 500
+ # mtu: 1300
+ 
+#    - route: 10.0.0.1/24
   # Unsafe routes allows you to route traffic over nebula to non-nebula nodes
   # Unsafe routes should be avoided unless you have hosts/services that cannot run nebula
   # NOTE: The nebula certificate of the "via" node *MUST* have the "route" defined as a subnet in its certificate
@@ -234,11 +243,11 @@ relay:
   # `install`: will default to true, controls whether this route is installed in the systems routing table.
   # This setting is reloadable.
   unsafe_routes:
-    #- route: 172.16.1.0/24
-    #  via: 192.168.100.99
-    #  mtu: 1300
-    #  metric: 100
-    #  install: true
+    - route: 172.16.1.0/24
+      via: 192.168.100.99
+      mtu: 1300
+      metric: 100
+      install: true
 
   # On linux only, set to true to manage unsafe routes directly on the system route table with gateway routes instead of
   # in nebula configuration files. Default false, not reloadable.
@@ -361,7 +370,9 @@ firewall:
       groups:
         - mobile
         - home
-
+    - port: 22
+      proto: tcp
+      host: any
     # Expose a subnet (unsafe route) to hosts with the group remote_client
     # This example assume you have a subnet of 192.168.100.1/24 or larger encoded in the certificate
     - port: 8080
